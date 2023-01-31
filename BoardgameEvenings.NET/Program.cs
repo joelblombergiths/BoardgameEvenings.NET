@@ -9,11 +9,12 @@ builder.Services.AddSingleton(new BoardgameAPI(builder.Configuration.GetValue<st
 
 WebApplication app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(config =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    config.SwaggerEndpoint("/swagger/v1/swagger.json", "BoardgameEvenings API .NET");
+    config.RoutePrefix = "";
+});
 
 app.UseHttpsRedirection();
 
