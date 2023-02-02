@@ -22,8 +22,12 @@ app.MapGet("/events", async (BoardgameAPI api) =>
 {
     try
     {
-        List<EventObject>? list = await api.GetEvents();
+        List<EventDTO>? list = await api.GetEvents();
         return list?.Count > 0 ? Results.Ok(list) : Results.NoContent();
+    }
+    catch (NotFound)
+    {
+        return Results.NotFound();
     }
     catch (Exception ex)
     {
@@ -31,12 +35,16 @@ app.MapGet("/events", async (BoardgameAPI api) =>
     }
 });
 
-app.MapGet("/event/{id:int}", async (BoardgameAPI api, int id) =>
+app.MapGet("/event/{id}", async (BoardgameAPI api, string id) =>
 {
     try
     {
         EventDetails? gameEvent = await api.GetEventById(id);
         return gameEvent != null ? Results.Ok(gameEvent) : Results.NotFound();
+    }
+    catch (NotFound)
+    {
+        return Results.NotFound();
     }
     catch (Exception ex)
     {
@@ -51,70 +59,94 @@ app.MapPost("/event", async (BoardgameAPI api, Event gameEvent) =>
         await api.CreateEvent(gameEvent);
         return Results.Ok();
     }
+    catch (NotFound)
+    {
+        return Results.NotFound();
+    }
     catch (Exception ex)
     {
         return Results.BadRequest(ex.Message);
     }
 });
 
-app.MapPut("/event/{id:int}", async (BoardgameAPI api, int id, Event gameEvent) =>
+app.MapPut("/event/{id}", async (BoardgameAPI api, string id, Event gameEvent) =>
 {
     try
     {
         await api.UpdateEvent(id, gameEvent);
         return Results.Ok();
     }
+    catch (NotFound)
+    {
+        return Results.NotFound();
+    }
     catch (Exception ex)
     {
         return Results.BadRequest(ex.Message);
     }
 });
 
-app.MapDelete("/event/{id:int}", async (BoardgameAPI api, int id) =>
+app.MapDelete("/event/{id}", async (BoardgameAPI api, string id) =>
 {
     try
     {
         await api.DeleteEvent(id);
         return Results.Ok();
     }
+    catch (NotFound)
+    {
+        return Results.NotFound();
+    }
     catch (Exception ex)
     {
         return Results.BadRequest(ex.Message);
     }
 });
 
-app.MapPost("/event{id:int}/attend", async (BoardgameAPI api, int id, Attendee attendee) =>
+app.MapPost("/event{id}/attend", async (BoardgameAPI api, string id, Attendee attendee) =>
 {
     try
     {
         await api.AttendEvent(id, attendee);
         return Results.Ok();
     }
+    catch (NotFound)
+    {
+        return Results.NotFound();
+    }
     catch (Exception ex)
     {
         return Results.BadRequest(ex.Message);
     }
 });
 
-app.MapDelete("/event/{eventId:int}/attendee/{attendeeId:int}", async (BoardgameAPI api, int eventId, int attendeeId) =>
+app.MapDelete("/event/{eventId}/attendee/{attendeeId}", async (BoardgameAPI api, string eventId, string attendeeId) =>
 {
     try
     {
         await api.RemoveAttendance(eventId, attendeeId);
         return Results.Ok();
     }
+    catch (NotFound)
+    {
+        return Results.NotFound();
+    }
     catch (Exception ex)
     {
         return Results.BadRequest(ex.Message);
     }
 });
 
-app.MapGet("/event{eventId:int}/attendees", async (BoardgameAPI api, int eventId) =>
+app.MapGet("/event{eventId}/attendees", async (BoardgameAPI api, string eventId) =>
 {
     try
     {
-        List<AttendeeObject>? list = await api.GetAllAttendees(eventId);
+        List<AttendeeDTO>? list = await api.GetAllAttendees(eventId);
         return list?.Count > 0 ? Results.Ok(list) : Results.NoContent();
+    }
+    catch (NotFound)
+    {
+        return Results.NotFound();
     }
     catch (Exception ex)
     {
@@ -122,12 +154,16 @@ app.MapGet("/event{eventId:int}/attendees", async (BoardgameAPI api, int eventId
     }
 });
 
-app.MapPut("/event/{eventId:int}/attendee/{attendeeId:int}", async (BoardgameAPI api, int eventId, int attendeeId, Attendee attendee) =>
+app.MapPut("/event/{eventId}/attendee/{attendeeId}", async (BoardgameAPI api, string eventId, string attendeeId, Attendee attendee) =>
 {
     try
     {
         await api.UpdateAttendee(eventId, attendeeId, attendee);
         return Results.Ok();
+    }
+    catch (NotFound)
+    {
+        return Results.NotFound();
     }
     catch (Exception ex)
     {

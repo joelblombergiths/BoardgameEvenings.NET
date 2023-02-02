@@ -1,15 +1,17 @@
-﻿using RestSharp;
+﻿using System.Net;
+using RestSharp;
 
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace BoardgameEvenings.NET;
 
 public record Event(string Date, string Name);
-public record EventObject(int ID, string Date, string Name);
-public record EventDetails(int ID, string Date, string Name, string TopVote);
+public record EventDTO(string ID, string Date, string Name);
+public record EventDetails(string Date, string Name, string TopVote);
 
 public record Attendee(string Name, string Vote);
-public record AttendeeObject(int ID, string Name, string Vote);
+public record AttendeeDTO(string ID, string Name, string Vote);
+
 
 public class BoardgameAPI
 {
@@ -21,23 +23,29 @@ public class BoardgameAPI
         _client = new(BaseURI);
     }
 
-    public async Task<List<EventObject>?> GetEvents()
+    public async Task<List<EventDTO>?> GetEvents()
     {
         RestRequest req = new("/events");
 
-        RestResponse<EventObject[]> res = await _client.ExecuteAsync<EventObject[]>(req);
-        if (!res.IsSuccessful) throw new(res.Content);
+        RestResponse<EventDTO[]> res = await _client.ExecuteAsync<EventDTO[]>(req);
+        if (!res.IsSuccessful)
+        {
+            throw res.StatusCode.Equals(HttpStatusCode.NotFound) ? new NotFound() : new Exception(res.Content);
+        }
 
         return res.Data?.ToList();
     }
 
-    public async Task<EventDetails?> GetEventById(int id)
+    public async Task<EventDetails?> GetEventById(string id)
     {
         RestRequest req = new("/event/{id}");
         req.AddUrlSegment("id", id);
 
         RestResponse<EventDetails> res = await _client.ExecuteAsync<EventDetails>(req);
-        if (!res.IsSuccessful) throw new(res.Content);
+        if (!res.IsSuccessful)
+        {
+           throw res.StatusCode.Equals(HttpStatusCode.NotFound) ? new NotFound() : new Exception(res.Content);
+        }
 
         return res.Data;
     }
@@ -48,60 +56,78 @@ public class BoardgameAPI
         req.AddJsonBody(gameEvent);
 
         RestResponse res = await _client.ExecuteAsync(req);
-        if (!res.IsSuccessful) throw new(res.Content);
+        if (!res.IsSuccessful)
+        {
+            throw res.StatusCode.Equals(HttpStatusCode.NotFound) ? new NotFound() : new Exception(res.Content);
+        }
     }
 
-    public async Task UpdateEvent(int id, Event gameEvent)
+    public async Task UpdateEvent(string id, Event gameEvent)
     {
         RestRequest req = new("/event/{id}", Method.Put);
         req.AddUrlSegment("id", id);
         req.AddJsonBody(gameEvent);
 
         RestResponse res = await _client.ExecuteAsync(req);
-        if (!res.IsSuccessful) throw new(res.Content);
+        if (!res.IsSuccessful)
+        {
+            throw res.StatusCode.Equals(HttpStatusCode.NotFound) ? new NotFound() : new Exception(res.Content);
+        }
     }
 
-    public async Task DeleteEvent(int id)
+    public async Task DeleteEvent(string id)
     {
         RestRequest req = new("/event/{id}", Method.Delete);
         req.AddUrlSegment("id", id);
 
         RestResponse res = await _client.DeleteAsync(req);
-        if (!res.IsSuccessful) throw new(res.Content);
+        if (!res.IsSuccessful)
+        {
+            throw res.StatusCode.Equals(HttpStatusCode.NotFound) ? new NotFound() : new Exception(res.Content);
+        }
     }
 
-    public async Task AttendEvent(int id, Attendee attendee)
+    public async Task AttendEvent(string id, Attendee attendee)
     {
         RestRequest req = new("/event/{id}/attend", Method.Post);
         req.AddUrlSegment("id", id);
         req.AddJsonBody(attendee);
 
         RestResponse res = await _client.ExecuteAsync(req);
-        if (!res.IsSuccessful) throw new(res.Content);
+        if (!res.IsSuccessful)
+        {
+            throw res.StatusCode.Equals(HttpStatusCode.NotFound) ? new NotFound() : new Exception(res.Content);
+        }
     }
 
-    public async Task RemoveAttendance(int eventId, int attendeeId)
+    public async Task RemoveAttendance(string eventId, string attendeeId)
     {
         RestRequest req = new("/event/{eventId}/attendee/{attendeeId}", Method.Delete);
         req.AddUrlSegment("eventId", eventId);
         req.AddUrlSegment("attendeeId", attendeeId);
 
         RestResponse res = await _client.ExecuteAsync(req);
-        if (!res.IsSuccessful) throw new(res.Content);
+        if (!res.IsSuccessful)
+        {
+            throw res.StatusCode.Equals(HttpStatusCode.NotFound) ? new NotFound() : new Exception(res.Content);
+        }
     }
 
-    public async Task<List<AttendeeObject>?> GetAllAttendees(int eventId)
+    public async Task<List<AttendeeDTO>?> GetAllAttendees(string eventId)
     {
         RestRequest req = new("/event/{eventId}/attendees");
         req.AddUrlSegment("eventId", eventId);
 
-        RestResponse<AttendeeObject[]> res = await _client.ExecuteAsync<AttendeeObject[]>(req);
-        if (!res.IsSuccessful) throw new(res.Content);
+        RestResponse<AttendeeDTO[]> res = await _client.ExecuteAsync<AttendeeDTO[]>(req);
+        if (!res.IsSuccessful)
+        {
+            throw res.StatusCode.Equals(HttpStatusCode.NotFound) ? new NotFound() : new Exception(res.Content);
+        }
 
         return res.Data?.ToList();
     }
 
-    public async Task UpdateAttendee(int eventId, int attendeeId, Attendee attendee)
+    public async Task UpdateAttendee(string eventId, string attendeeId, Attendee attendee)
     {
         RestRequest req = new("/event/{eventId}/attendee/{attendeeId}", Method.Put);
         req.AddUrlSegment("eventId", eventId);
@@ -109,6 +135,9 @@ public class BoardgameAPI
         req.AddJsonBody(attendee);
 
         RestResponse res = await _client.ExecuteAsync(req);
-        if (!res.IsSuccessful) throw new(res.Content);
+        if (!res.IsSuccessful)
+        {
+            throw res.StatusCode.Equals(HttpStatusCode.NotFound) ? new NotFound() : new Exception(res.Content);
+        }
     }
 }
